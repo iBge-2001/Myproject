@@ -1,0 +1,158 @@
+<!--
+班级信息，可以修班级信息，添加班级信息：必须添加已存在专业的班级：使用下拉框选择
+学院信息：添加学院，或者给学院添加新的专业：使用下拉框选择已存在的学院，
+课程信息，添加课程：必须选择已存在的教师，已存在的专业号：使用下拉框选择
+宿舍信息：添加修改宿舍：必须是已存在的学生：使用下拉框选择
+添加用户，添加学生或者教师，必须为教师选择学院和专业，且是已存在的专业：使用下拉框选择
+
+
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>welcome学生信息管理系统</title>
+	<script src="../js/request.js"></script>
+	<link rel="stylesheet" href="../styles/index.css">
+</head>
+<body>
+	<div id="a1">
+		<img src="../img/logo_jw_d.png" style="vertical-align: bottom;">
+		
+			<font size="6"><b><span id="top">&nbsp;学生信息管理系统服务平台</span></b></font>
+	</div>
+	<div id="a2">
+		<center>
+		<div id="aa1">
+			<a href="#" @click.pravent="logout()"><span id="top"><b>退出登录</b></span></a>
+		</div>
+		<div id="aa2">
+			<a href="#" id="btn"><span id="top"><b>个性化</b></span></a>
+		</div>
+		</center>
+	</div>
+<div id="tab1">
+	<div id="tab2">
+		<table border="0" cellspacing="0" cellpadding="0" id="t2">
+			<tr><th v-if="user.type===1">管&nbsp;理&nbsp;员&nbsp;信&nbsp;息</th><th v-if="user.type===2">学&nbsp;生&nbsp;信&nbsp;息</th></tr>
+			<tr><td ><img src="../img/3d84e1a572d7a401ad5c01661b571b06.jpg" width="100px" height="100px" id="img1"></td></tr>
+			<tr><td height="30px">{{user.user}}</td></tr>
+		</table>
+	</div>
+<div class="treebox">
+	<ul class="menu">
+		<li class="level1">
+			<a href="#none"><em class="ico ico5"></em>班级管理<i class="down"></i></a>
+			<ul class="level2">
+				<li><a href="班级信息.html" target="yem">班级信息</a></li>
+				<li><a href="班级学生.html" target="yem">班级学生</a></li>
+			</ul>
+		</li>
+		<li class="level1">
+			<a href="#none"><em class="ico ico2"></em>学院管理<i></i></a>
+			<ul class="level2">
+				<li><a href="学院信息.html" target="yem">学院信息管理</a></li>
+				<li><a href="宿舍信息.html" target="yem">宿舍信息管理</a></li>
+				<li><a href="违规违纪.html" target="yem">违规违纪信息管理</a></li>
+				<li><a href="教师评价.html" target="yem">课程信息管理</a></li>
+
+			</ul>
+		</li>
+		<li class="level1">
+			<a href="#none"><em class="ico ico4"></em>用户管理<i></i></a>
+			<ul class="level2">
+				<li><a href="用户信息.html" target="yem">用户信息</a></li>
+				<li><a href="添加用户.html" target="yem">用户添加</a></li>
+			</ul>
+		</li>
+		<li class="level1">
+			<a href="#none"><em class="ico ico1"></em>账户管理<i></i></a>
+			<ul class="level2">
+				<li><a href="修改密码.html" target="yem">修改密码</a></li>
+			</ul>
+		</li>
+	</ul>
+</div>
+</div>
+<div id="zhu">
+	<iframe src="首页.html" width="97%" height="97%" style="margin-left: 1%" name="yem" border="0" scrolling="no" frameborder="0"></iframe>
+</div>
+<!-- 引入 jQuery -->
+<script src="../js/jquery1.8.3.min.js"></script>
+<script src="../js/easing.js"></script>
+	<script src="../js/vue.js"></script>
+	<script src="../js/axios-0.18.0.js"></script>
+<script>
+//等待dom元素加载完毕.
+$(function(){
+	$(".treebox .level1>a").click(function(){
+		$(this).addClass('current')   //给当前元素添加"current"样式
+		.find('i').addClass('down')   //小箭头向下样式
+		.parent().next().slideDown('slow','easeOutQuad')  //下一个元素显示
+		.parent().siblings().children('a').removeClass('current')//父元素的兄弟元素的子元素去除"current"样式
+		.find('i').removeClass('down').parent().next().slideUp('slow','easeOutQuad');//隐藏
+		 return false; //阻止默认时间
+	});
+})
+</script>
+	<script>
+		let vm = new Vue({
+			el:'#a2',
+			mounted(){
+				axios.get("../user").then((res)=>{
+					console.log(res)
+					if (res.data.data === null){
+						window.location.href = './登录.html?'
+					}
+				})
+			},
+			methods:{
+				logout(){
+					axios.get("../user/logout").then((res)=>{
+						window.location.href = './登录.html?'
+					})
+				}
+			}
+		})
+		let vm2 = new Vue({
+			el:'#tab2',
+			data:{
+				user:{
+					id:"",
+					newPassword:"",
+					password: "",
+					type: "",
+					user: "null"
+				}
+			},
+			mounted(){
+				this.user = JSON.parse(localStorage.getItem("user"));
+				console.log(this.user);
+
+			}
+		})
+	</script>
+	<script language="JavaScript">
+	function custom_close(){
+		if(confirm('确认要关闭页面吗？')==true)
+		{
+			window.opener=null;
+			window.open('','_self');
+			window.close();
+		 }
+		else{
+				}
+	}
+	</script>
+	<script type="text/javascript">
+		var btn = document.getElementById("btn");
+		var body = document.getElementById("zhu");
+		let array = ["cadetblue", "#DCDCDC", "mistyrose", "white", "pink", "#DEB887", "coral","#FFF"];
+		let index = 0;
+		btn.onclick = function () {
+		body.style.backgroundColor = array[index];
+		index = (index + 1) % array.length;
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="//unpkg.com/element-ui@2.15.13/lib/index.js"></script>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="//unpkg.com/element-ui@2.15.13/lib/theme-chalk/index.css">
+    <script src="../plugins/elementui/index.js"></script>
+    <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+    <script src="../api/student.js"></script>
+    <script src="../js/request.js"></script>
+    <script src="../plugins/axios/axios.min.js"></script>
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <meta charset="UTF-8">
+    <title>我的信息</title>
+</head>
+<body>
+<div id="app">
+    <div class="a1" style="color:#6495ED">~~班级信息~~</div>
+
+    <el-table border="1" cellspacing="0" cellpadding="" size="small" current-row-key="id" :data="studentList" stripe highlight-current-row>
+        <el-table-column prop="sid" align="center" label="学号"></el-table-column>
+        <el-table-column prop="sname" label="姓名" align="center"></el-table-column>
+        <el-table-column prop="ssex" label="性别" align="center">
+            <template slot-scope="scope">
+                <span>{{ scope.row.ssex == '1' ? '男': '女' }}</span>
+            </template>
+        </el-table-column>
+        <el-table-column prop="sage" label="年龄"></el-table-column>
+    </el-table>
+    <el-pagination
+            class="pageList"
+            :page-sizes="[10, 20, 30, 40]"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="counts"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+    ></el-pagination>
+
+</div>
+
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            studentList:[],
+            page: 1,
+            pageSize: 10,
+            counts: 0,
+        },
+        created() {
+            this.init()
+        },
+        computed: {
+
+        },
+        methods: {
+            async init () {
+                await getClassStudentApi({'page': this.page, 'pageSize': this.pageSize}).then(res => {
+                    if (String(res.code) === '20041') {
+                        this.studentList = res.data.records
+                        this.counts = Number(res.data.total)
+                        console.log(this.counts)
+                    } else {
+                        this.$message.error(res.msg || '操作失败')
+                    }
+                }).catch(err => {
+                    this.$message.error('请求出错了：' + err)
+                })
+            },
+            handleSizeChange (val) {
+                this.pageSize = val
+                this.init()
+            },
+            handleCurrentChange (val) {
+                this.page = val
+                this.init()
+            }
+        }
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<link rel="stylesheet" href="../plugins/elementui/index.css">
+<link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+<meta charset="utf-8" />
+<title>(*^▽^*)欢迎登录</title>
+<script src="../js/vue.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<script src="../plugins/elementui/index.js"></script>
+<script src="../plugins/font-awesome/css/font-awesome.min.css"></script>
+<script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+<script src="../api/user.js"></script>
+<script src="../js/request.js"></script>
+<script src="../plugins/axios/axios.min.js"></script>
+	<head>
+		<meta charset="utf-8">
+		<title>修改密码</title>
+		<style type="text/css">
+			#a1{width: 40%;height: 400px;box-shadow: 10px 0px 35px 10px #6495ED;margin-top: 90px;float: left;border-radius: 0px 27px 27px 0px;}
+			#app{right: 1px}
+			.i2{border-radius: 10px 10px 10px 10px;height: 30px;width: 230px;}
+			.i3{border-radius: 20px 20px 20px 20px;color: #000000;height: 40px;width: 180px;font-size: x-large;background-color: white;
+			border-width: 4px; }
+			#a2{width: 20%;height: 400px;float: left;margin-top: 90px;box-shadow: 0px 0px 35px 0px #6495ED;border-radius: 27px 0px 0px 27px;}
+			#a3{width: 20%;height: 400px;float: left;margin-top: 90px;}
+			#img1{height: 400px;}
+		</style>
+	</head>
+	<body>
+			<div id="a3">
+			</div>
+			<div id="a2">
+				<img src="../img/书2.jpg" id="img1" align="right">
+			</div>
+			<div id="a1">
+				<h1>~~修改密码~~</h1>
+				<hr width="100%" size="3" color="black">
+				<div  id="app">
+					<el-form ref="form" :model="form" label-width="50%">
+						<el-form-item label="当前密码">
+							<el-input v-model="form.repassword" style="width: 60%" ></el-input>
+						</el-form-item>
+						<el-form-item label="输入密码">
+							<el-input  type="password" v-model="form.newPassword" style="width: 60%" ></el-input>
+						</el-form-item>
+						<el-form-item label="再次确认密码" >
+							<el-input type="password" v-model="form.password" style="width: 60%"></el-input>
+						</el-form-item>
+						<el-form-item label="邮箱:" v-if="type ==2">
+							<el-input type="text" v-model="createForm.email" style="width: 73%" ></el-input>
+							<el-button @click="sendmail" >发送验证码</el-button>
+						</el-form-item>
+						<el-form-item label="验证码:" v-if="type ==2">
+							<el-input type="text" v-model="createForm.code" ></el-input>
+						</el-form-item>
+						<el-form-item>
+						<el-button type="primary" @click="onSubmit">立即修改</el-button>
+							<el-button>取消</el-button>
+						</el-form-item>
+					</el-form>
+				</div>
+			</div>
+		<script type="text/javascript">
+			var vue = new Vue({
+				el: '#a1',
+				data: {
+					form: {
+						password: "",
+						newPassword: "",
+						repassword: "",
+						email:"",
+						code:""
+					},
+					type:""
+				},
+				created(){
+					this.type = JSON.parse(localStorage.getItem('user')).type
+				},
+				methods: {
+					async sendmail(){
+						email = this.createForm.email
+						sendMsgApi(email).then((res =>{
+							if (res.code === 20061){
+								this.$message.success("发送成功，请到邮箱查看验证码")
+							}
+							else if(res.code === 20060){
+								this.$message.error("发送失败，请检查邮箱是否有效")
+							}
+						}))
+					},
+					updatePassword(){
+						updatePasswordApi({user:this.form.user,password:this.form.password,email:this.form.email,code:this.form.code,repassword:this.form.repassword,type:this.type}).then((res)=>{
+							if (res.code === 20031){
+								this.$message.success("res.data")
+								this.dialogFormVisible4add = false
+							}
+							else if(res.code === 20030){
+								this.$message.error("res.msg")
+							}
+						})
+					},
+					onSubmit() {
+						console.log(this.form);
+						if (this.form.newPassword===this.form.password){
+							this.updatePassword()
+						} else {
+							this.$message.error("密码不一致，请检查输入的密码是否相同");
+						}
+					}
+				}
+			})
+		</script>
+	</body>
+</html>

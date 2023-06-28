@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>成绩信息</title>
+    <script src="//unpkg.com/element-ui@2.15.13/lib/index.js"></script>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="//unpkg.com/element-ui@2.15.13/lib/theme-chalk/index.css">
+    <script src="../plugins/elementui/index.js"></script>
+    <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+    <script src="../api/grade.js"></script>
+    <script src="../js/request.js"></script>
+    <script src="../plugins/axios/axios.min.js"></script>
+    <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+</head>
+<body>
+
+<div id="a2">
+    <div id="a1">
+        <h2 style="float: left">~~成绩信息~~</h2>
+    </div>
+    <div>
+        <el-button  id="B2" @click="showAddInput()" style="font-size: large">添加学生</el-button>
+    </div>
+    <div class="table">
+        <table border="1" style="text-align:center" id="table" cellspacing="0">
+            <el-table  border="1" cellspacing="" label-width="10px" cellpadding="" size="small" current-row-key="id"
+                      :data="grades" stripe highlight-current-row>
+                <el-table-column label="序号" align="center">
+                    <template slot-scope='scope'>
+                        {{grades.indexOf(scope.row)+1}}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="sid" label="学号" align="center"></el-table-column>
+                <el-table-column prop="grade" label="成绩 " align="center"></el-table-column>
+                <el-table-column label="操作" align="center" v-if="type ==0 || type ==1" >
+                    <template slot-scope="scope" >
+                        <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
+                        <el-button type="danger" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            </el-table>
+            <el-pagination
+                    class="pageList"
+                    :page-sizes="[10, 20, 30, 40]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="counts"
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+            ></el-pagination>
+        </table>
+    </div>
+    <div class="add-form">
+        <el-dialog title="编辑检查项" :visible.sync="dialogFormVisible4Edit">
+            <el-form ref="dataAddForm" :model="formData" label-position="right" label-width="100px">
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="学号" prop="formData.sid">
+                            <el-input v-model="formData.sid"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="成绩" prop="formData.grade">
+                            <el-input v-model="formData.grade"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="dialogFormVisible4Edit = false;restFrom()">取消</el-button>
+                <el-button type="primary" @click="handleEdit()">确定</el-button>
+            </div>
+        </el-dialog>
+    </div>
+    <div class="add-form">
+        <el-dialog title="添加检查项" :visible.sync="dialogFormVisible4Add">
+            <el-form ref="dataAddForm" :model="formData" label-position="right" label-width="100px">
+                <el-row>
+                <el-col :span="12">
+                    <el-form-item label="学号">
+                        <el-select style="width: 300px" v-model="formData.sid" placeholder="选择该课程的学生学号">
+                            <el-option v-for="emp in emps" :value="emp" :label="emp"></el-option>
+<!--                            <el-option  >111111</el-option>-->
+<!--                            <el-option v-for="emp in emps" :value="emp">{{emp}}</el-option>-->
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="成绩" prop="formData.grade">
+                            <el-input v-model="formData.grade"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+
+                <el-button @click="dialogFormVisible4Add = false" >取消</el-button>
+
+                <el-button type="primary" @click="handleAdd()">确定</el-button>
+            </div>
+        </el-dialog>
+    </div>
+</div>
+
+
+
+<script src="../plugins/elementui/index.js"></script>
+<script type="text/javascript">
+
+    var vue = new Vue({
+        el: '#a2',
+        data: {
+            emp:"",
+            cid:"",
+            emps : [],
+            grades: [],
+            page: 1,
+            pageSize: 10,
+            counts: 0,
+            dialogFormVisible4Edit: false,
+            dialogFormVisible4Add: false,
+            type:"",
+            formData:{
+                sid:"",
+            },
+        },
+        computed: {
+            listLength: function () {
+                return this.grades.length
+            }
+        },
+        created() {
+            let user = JSON.parse(localStorage.getItem("user"));
+            this.type = user.type,
+            this.init();
+            this.GetSelectSid();
+        },
+        methods: {
+            restFrom(){
+                this.formData = {};
+            },
+            showAddInput() {
+                this.dialogFormVisible4Add = "true";
+            },
+            async init () {
+                await getGradeByCidApi({'page': this.page, 'pageSize': this.pageSize}).then(res => {
+                    if (String(res.code) === '20041') {
+                        this.grades = res.data.records
+                        this.counts = Number(res.data.total)
+                        console.log(this.counts)
+                    } else {
+                        this.$message.error('操作失败')
+                    }
+                }).catch(err => {
+                    this.$message.error('请求出错了：' + err)
+                })
+            },
+            async GetSelectSid() {
+                await getSidByPidApi().then((res) => {
+                    console.log(res)
+                    this.emps = res.data;
+                })
+            },
+            handleSizeChange (val) {
+                this.pageSize = val
+                this.init()
+            },
+            handleCurrentChange (val) {
+                this.page = val
+                this.init()
+            },
+            handleUpdate(row) {
+                console.log(row);
+                axios.get("../teacher/grade/" + row.sid).then((res) => {
+                    if (res.data.code === 20041) {
+                        this.formData = res.data.data;
+                        this.formData.length = res.data.data.length;
+                        this.dialogFormVisible4Edit = true;
+                    } else this.$message.error(res.data.msg);
+                })
+            },
+            handleAdd() {
+                console.log(this.formData);
+                axios.post("../teacher", this.formData).then((res) => {
+                    console.log(res.data);
+                    if (res.data.code === 20011) {
+                        this.dialogFormVisible4Add = false;
+                        this.$message.success("添加成功");
+                    } else if (res.data.code === 20010) {
+                        this.$message.error("添加失败");
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
+                }).finally(() => {
+                    this.formData={}
+                    this.init();
+                });
+            },
+            handleEdit() {
+                console.log(this.formData);
+                axios.put("../teacher", this.formData).then((res) => {
+                    if (res.data.code === 20031) {
+                        this.dialogFormVisible4Edit = false;
+                        this.$message.success("编辑成功");
+                    } else if (res.data.code === 20030) {
+                        this.$message.error("编辑失败");
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
+                }).finally(() => {
+                    this.formData = {}
+                    this. this.init();
+                });
+            },
+            handleDelete(row) {
+                //1.弹提示框
+                this.$confirm("此操作永久删除数据，是否继续？", "提示", {
+                    type: 'info'
+                }).then(() => {
+                    axios.delete("/teacher/" + row.sid).then((res) => {
+                        if (res.data.code == 20021) {
+                            //2、做删除业务
+                            this.$message.success("删除成功");
+                            this.SelectgradeBycourse();
+                        } else {
+                            this.$message.error("删除失败");
+                        }
+                    })
+                }).catch(() => {
+                    //3、取消删除操作
+                    this.$message.info("取消删除操作");
+                }).finally(() => {
+                    this.init();
+                });
+            }
+        }
+    })
+</script>
+</body>
+</html>

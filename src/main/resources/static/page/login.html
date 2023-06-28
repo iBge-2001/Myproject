@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="../plugins/elementui/index.css">
+  <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="../styles/style.css">
+  <link rel="stylesheet" href="../styles/login.css">
+  <meta charset="utf-8" />
+  <title>(*^▽^*)欢迎登录</title>
+  <script src="../js/vue.js"></script>
+  <script src="../js/axios-0.18.0.js"></script>
+  <script src="../plugins/elementui/index.js"></script>
+  <script src="../plugins/font-awesome/css/font-awesome.min.css"></script>
+  <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+  <script src="../api/login.js"></script>
+  <script src="../js/request.js"></script>
+  <script src="../plugins/axios/axios.min.js"></script>
+
+</head>
+<body >
+<center>
+<div id="AA">
+  <div id="a1">
+    <div id="aa">
+    </div>
+    <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <img src="../img/logo_jw_d.png" style="vertical-align: bottom;"><font size="6" ><b>&nbsp;学生信息管理系统服务平台</b></font>
+
+  </div>
+
+  <div id="a2">
+    <img src="../img/书本.jpg" align="right" height="400px" id="shu">
+  </div>
+  <div id="a4">
+    <h1>用户登录</h1>
+    <hr width="70%" size="3" color="black">
+    <el-form :model="formData" style="margin-left: 65px">
+      <el-row>
+        <el-col :span="18">
+          <el-form-item style="border-radius: 10px 10px 10px 10px;height: 30px;width: 230px;" label="账号" prop="user">
+            <el-input  v-model="formData.user"/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <br/>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item style="border-radius: 10px 10px 10px 10px;height: 30px;width: 230px;" label="密码" prop="password">
+            <el-input type="password" class="i2" v-model="formData.password"/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <br/><br/>
+      <el-row>
+        <el-col :span="6">
+          <el-input type="text" id="vcode" placeholder="验证码" v-model="TheCode"/>
+        </el-col>
+        <el-col style="width: 65%">
+          <span id="code" title="看不清，换一张" @click="changeImg()">66</span><br><br>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">
+          <input type="button" @click="submit()" value="登录" id="i3" class="btns" onmouseover="this.style.backgroundColor=''" onmousedown="this.style.backgroundColor='#6495ED'"/>
+        </el-col>
+        <el-col :span="8">
+          <input type="button" id="ii3" value="注册" @click="dialogFormVisible4add=true" class="btns" onmouseover="this.style.backgroundColor=''" onmousedown="this.style.backgroundColor='#6495ED'"></input>
+        </el-col>
+      </el-row>
+    </el-form><br>
+    <div>
+      <el-dialog title="注册" :visible.sync="dialogFormVisible4add">
+        <el-form ref="form" :model="createForm" label-width="50%">
+          <el-form-item label="学号:">
+            <el-input  type="text" v-model="createForm.sid"  ></el-input>
+          </el-form-item>
+          <el-form-item label="密码:" >
+            <el-input type="password" v-model="createForm.password"></el-input>
+          </el-form-item>
+          <el-form-item label="邮箱:" >
+            <el-input type="text" v-model="createForm.email" style="width: 73%"></el-input>
+            <el-button @click="sendmail" >发送验证码</el-button>
+          </el-form-item>
+          <el-form-item label="验证码:">
+            <el-input type="text" v-model="createForm.code"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="createUser">注册</el-button>
+            <el-button @click="dialogFormVisible4add = false">取消</el-button>
+          </el-form-item>
+        </el-form>
+      </el-dialog>
+    </div>
+  </div>
+</div>
+</center>
+<script type="text/javascript">
+  var vue = new Vue({
+    el:"#a4",
+    data:{
+      formData:{
+        user:"",
+        password:""
+      },
+      createForm:{
+        sid:"",
+        password:"",
+        email:"",
+        code:""
+      },
+      TheCode:"",
+      dialogFormVisible4add:""
+    },
+    created(){
+      this.dialogFormVisible4add = false
+    },
+    methods:{
+      submit(){
+        if(this.formData.user !== "" && this.formData.password !== ""){
+          if(this.codeCheck()){
+          // if(true){
+            loginApi(this.formData).then((res) =>{
+              if (res.code === 20051){
+                window.localStorage.setItem("user",JSON.stringify(res.data))
+                if (res.data.type === 0){
+                  alert(1111)
+                  window.location.href = "./index.html";
+                }else if(res.data.type === 1) {
+                  window.location.href = "./teacherIndex.html";
+                }else if(res.data.type ===2){
+                  window.location.href = "./studentIndex.html";
+                }
+              }else {
+                alert(res.msg)
+              }
+            })
+          }
+        }else {
+          alert("账号密码不能为空！");
+        }
+      },
+      async sendmail(){
+        email = this.createForm.email
+        sendMsgApi(email).then((res =>{
+          if (res.code === 20061){
+            this.$message.success("发送成功，请到邮箱查看验证码")
+          }
+          else if(res.code === 20060){
+            this.$message.error("发送失败，请检查邮箱是否有效")
+          }
+        }))
+      },
+      createUser(){
+          createUserApi({sid:this.createForm.sid,password:this.createForm.password,email:this.createForm.email,code:this.createForm.code}).then((res)=>{
+            if (res.code === 20011){
+              this.$message.success("res.data")
+              this.dialogFormVisible4add = false
+            }
+            else if(res.code === 20010){
+              this.$message.error("res.msg")
+            }
+          })
+      },
+      codeCheck() {
+        var input_code = document.getElementById('code').innerText;
+        if(this.TheCode === input_code) {
+          alert("验证码正确，开始登录~");
+          return true;
+        }
+        alert("请输入正确的验证码!");
+        return false;
+      },
+      changeImg() {
+        var arrays = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+          'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+          'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+          'u', 'v', 'w', 'x', 'y', 'z',
+          'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+          'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+          'U', 'V', 'W', 'X', 'Y', 'Z'];
+        code = ''; //重新初始化验证码
+        //alert(arrays.length);
+        for(var i = 0; i < 4; i++) {
+          var r = parseInt(Math.random() * arrays.length);
+          code += arrays[r];
+        }
+        document.getElementById('code').innerText = code; //将验证码写入指定区域
+      }
+    },
+    mounted(){
+      this.changeImg()
+    }
+  })
+</script>
+</body>
+</html>

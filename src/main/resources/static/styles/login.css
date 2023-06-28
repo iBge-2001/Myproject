@@ -1,0 +1,16 @@
+#aa{height: 30px;width: 100%;float: left;}
+/* html.body{width: 100%;height: 100%;} */
+#AA{width: 100%;height: 100%;float: left;box-shadow: 0px 0px 35px 0px #6495ED;z-index: 1;}
+/* body{background-size: 100%; *//* background:-webkit-linear-gradient(right,#6495ED,pink); background-size: 50%; *//* } */
+#a1{width: 100%;height: 250px;float: left;padding-left: 0px;font-size: x-large;padding-top: 0px;z-index: 1;background:#6495ED/* -webkit-linear-gradient(left,#6495ED) */; background-size: 100%;border-radius: 0px 0px 40% 40%/0px 0px 90px 90px;}
+#a2{width: 30%;height: 400px;float: left;position: absolute;left: 15%;top: 105px;z-index: 2;}
+#a4{width: 400px;height: 400px;float: left;border-radius: 0px 27px 27px 0px;background-color:white;
+    text-align: center;box-shadow: 0px 0px 35px 0px #6495ED;position: absolute;left: 45%;top: 150px;z-index: 2;
+}
+.i2{border-radius: 10px 10px 10px 10px;height: 30px;width: 230px;}
+#i3,#ii3{border-radius: 20px 20px 20px 20px;color: #000000;height: 40px;width: 100px;font-size: large;background-color:white;
+    margin-left: 25px;}
+#vcode{border-radius: 10px 10px 10px 10px;height: 30px;width: 150px;}
+#code{background:-webkit-linear-gradient(right,#6495ED,pink,#6495ED,pink);color: white; font-size: 22px;width: 100px;height: 35px;margin-left: 20px;font-family: "楷体";
+    cursor: pointer;padding: 5px;}
+#shu{border-radius: 27px 0px 0px 27px;box-shadow: 0px 0px 35px 0px #6495ED;}

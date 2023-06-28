@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+详细设计：
+1、将学生信息查找出来
+2、根据学生的classid到class表查找班级
+3、根据spid到academy表查找专业和学院
+4、查找ssex 1为男生 2为女生
+
+
+-->
+
+<head>
+    <script src="//unpkg.com/element-ui@2.15.13/lib/index.js"></script>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="//unpkg.com/element-ui@2.15.13/lib/theme-chalk/index.css">
+    <script src="../plugins/elementui/index.js"></script>
+<!--    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">-->
+    <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+    <script src="../api/student.js"></script>
+    <script src="../js/request.js"></script>
+    <script src="../plugins/axios/axios.min.js"></script>
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <meta charset="UTF-8">
+    <title>我的信息</title>
+</head>
+<body>
+<div id="app">
+    <div class="a1" style="color:#6495ED">~~我的信息~~</div>
+
+    <el-descriptions title="个人资料" direction="vertical" :column="4" border >
+        <el-descriptions-item label="学号">{{formData.sid}}</el-descriptions-item>
+        <el-descriptions-item label="姓名">{{formData.sname}}</el-descriptions-item>
+        <el-descriptions-item label="性别" :span="2">{{formData.ssex == '1' ? '男': '女'}}</el-descriptions-item>
+        <el-descriptions-item label="住址" :span="2">{{formData.saddress}}</el-descriptions-item>
+        <el-descriptions-item label="邮箱" :span="2">{{formData.smail}}</el-descriptions-item>
+        <el-descriptions-item label="电话" :span="2">{{formData.sphone}}</el-descriptions-item>
+        <el-descriptions-item label="班级" :span="2">{{formData.classname}}</el-descriptions-item>
+        <el-descriptions-item label="专业" :span="2">{{formData.profession}}</el-descriptions-item>
+        <el-descriptions-item label="学院" :span="2">{{formData.academy}}</el-descriptions-item>
+    </el-descriptions>
+
+</div>
+
+
+
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            formData: [],
+            // formData: {
+            //     sid:"",
+            //     sname:"",
+            //     ssex:"",
+            //     saddress:"",
+            //     smail:"",
+            //     sphone:"",
+            //     profession:"",
+            //     academy:""
+            // }
+        },
+        created() {
+        this.getById();
+        },
+        computed: {
+
+        },
+        methods: {
+            async getById() {
+                getStudentApi().then((res => {
+                    if (res.code === 20041) {
+                        this.formData=res.data;
+                        console.log(this.formData)
+                        this.$message.success("欢迎进入查看信息界面")
+                    } else if (res.code === 20040) {
+                        this.$message.error("res.msg")
+                    }
+                }))
+            }
+        }
+    })
+</script>
+</body>
+</html>

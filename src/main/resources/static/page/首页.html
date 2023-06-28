@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="../js/vue.js"></script>
+		<script src="../js/axios-0.18.0.js"></script>
+		<script src="../plugins/elementui/index.js"></script>
+		<script src="../plugins/font-awesome/css/font-awesome.min.css"></script>
+		<script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+		<link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.13/lib/theme-chalk/index.css">
+		<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+		<link rel="stylesheet" href="../styles/style.css">
+		<link rel="stylesheet" href="../styles/首页.css">
+	</head>
+
+	<body>
+		<h1><font style="color: #666;">~~首页~~</font></h1>
+		<div id="app">
+		<div id="a3">
+			<font size="4" color="white">学院总人数</font>
+			<hr color="#666" size="2" width="30%" align="left">
+			<center>
+				<div id="btoom" v-bind="count" >
+					<b>{{count}}人</b>
+					<div id="biao">
+						<b>Ⅰ</b>
+					</div>
+				</div></center>
+		</div>
+		<div id="a1">
+			<font size="4" color="#6495ED">学院均挂科率</font>
+			<hr color="#666" size="2" width="30%" align="left">
+			<center>
+				<div id="btoom1">
+					<b>{{percent}}</b>
+					<div id="biao">
+						<b>Ⅱ</b>
+					</div>
+				</div></center>
+		</div>
+		<div id="a2" >
+				<center>
+			<el-calendar v-model="value">
+					</el-calendar>
+				</center>
+		</div>
+		<div id="a1">
+			<font size="4" color="#6495ED">班级总数</font>
+			<hr color="#666" size="2" width="30%" align="left">
+			<div id="btoom1">
+			<b>{{classcount}}个</b>
+			<div id="biao">
+				<b>Ⅲ</b>
+			</div>
+			</div>
+		</div>
+		<div id="a3">
+			<font size="4" color="white">班级均人数</font>
+			<hr color="#666" size="2" width="30%" align="left">
+			<div id="btoom">
+			<b>{{avgcount}}人</b>
+			<div id="biao">
+				<b>Ⅳ</b>
+			</div>
+			</div>
+		</div>
+		<div id="a3">
+			<font size="4" color="white">空闲教室个数</font>
+			<hr color="#666" size="2" width="30%" align="left">
+
+			<div id="btoom">
+			<b>{{this.unUseClassroomCount}}个</b><div id="biao">
+				<b>Ⅴ</b>
+			</div>
+			</div>
+		</div>
+				<div id="a1">
+				<font size="4" color="#6495ED">违规违纪人数</font>
+				<hr color="#666" size="2" width="30%" align="left">
+					<div id="btoom1">
+						<b>18人</b>
+							<div id="biao">
+								<b>Ⅵ</b>
+							</div>
+					</div>
+				</div>
+		</div>
+		<!-- 引入组件库 -->
+		<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+	<script>
+		var vue = new Vue({
+			el:'#app',
+			data:{
+			value:null,
+			count:"",
+			percent:"",
+			avgcount:"",
+			classcount:"",
+			unUseClassroomCount:""
+			},
+			created(){
+				this.mGetDate();
+				this.getCount();
+				this.getPercent();
+				this.getAvgCount();
+				this.getClassCount();
+				this.getUnuseClassroom();
+			},
+			methods:{
+				 mGetDate(){
+				this.value=new Date();
+				},
+				getCount(){
+					axios.get("../student/count").then((res)=>{
+						this.count = res.data.data;
+					})
+				},
+				getPercent(){
+					axios.get("../grade/percent").then((res)=>{
+						this.percent = res.data.data;
+					})
+				},
+				getAvgCount(){
+					axios.get("../class/avgcount").then((res)=>{
+						this.avgcount = res.data.data;
+					})
+				},getClassCount(){
+					axios.get("../class/classcount").then((res)=>{
+						this.classcount = res.data.data;
+					})
+				},
+					getUnuseClassroom(){
+				 	axios.get("../classroom/classroomCount").then((res) => {
+						this.unUseClassroomCount = res.data.data;
+					})
+					}
+			}
+		})
+	</script>
+	</body>
+</html>

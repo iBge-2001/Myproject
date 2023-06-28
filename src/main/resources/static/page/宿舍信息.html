@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="//unpkg.com/element-ui@2.15.13/lib/index.js"></script>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="//unpkg.com/element-ui@2.15.13/lib/theme-chalk/index.css">
+    <script src="../plugins/elementui/index.js"></script>
+    <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+    <script src="../api/student.js"></script>
+    <script src="../js/request.js"></script>
+    <script src="../plugins/axios/axios.min.js"></script>
+    <title>宿舍信息</title>
+</head>
+<body>
+<div id="app">
+    <div id="a1">
+        <h2 style="color:#6495ED;width: 30%;height: 90px;float: left;font-size: larger">~~宿舍信息~~</h2>
+    </div>
+    <div id="t1">
+        <el-table id="tab1" border="1" cellspacing="0" cellpadding="" size="small" current-row-key="id" :data="pros"
+                  stripe highlight-current-row>
+            <el-table-column prop="classname" align="center" label="班级" v-if="type != 0"></el-table-column>
+            <el-table-column prop="sid" align="center" label="学号"></el-table-column>
+            <el-table-column prop="sname" label="姓名" align="center" v-if="type != 0" ></el-table-column>
+            <el-table-column prop="buildingNo" label="楼号" align="center"></el-table-column>
+            <el-table-column prop="dormitory" label="宿舍号" align="center"></el-table-column>
+            <el-table-column prop="sid" label="操作" align="center" v-if="type == 0">
+                <template slot-scope="scope">
+                    <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
+                    <el-button type="danger" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-pagination
+                class="pageList"
+                :page-sizes="[10, 20, 30, 40]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="counts"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+        ></el-pagination>
+    </div>
+    <div class="add-form">
+        <el-dialog title="编辑检查项" :visible.sync="dialogFormVisible4Edit">
+            <el-form ref="dataAddForm" :model="formData" label-position="right" label-width="100px">
+                <el-row>
+
+                    <el-col :span="12">
+
+                        <el-form-item label="班级" prop="classname">
+
+                            <el-input v-model="formData.classname"/>
+
+                        </el-form-item>
+
+                    </el-col>
+                    <el-col :span="12">
+
+                        <el-form-item label="姓名">
+
+                            <el-input v-model="formData.st_name" prop="st_name"></el-input>
+
+                        </el-form-item>
+
+                    </el-col>
+
+
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+
+                        <el-form-item label="楼号" prop="building_no">
+
+                            <el-input v-model="formData.building_no"/>
+
+                        </el-form-item>
+
+                    </el-col>
+
+                    <el-col :span="12">
+
+                        <el-form-item label="宿舍号">
+
+                            <el-input v-model="formData.dormitory_no" prop="dormitory_no"></el-input>
+
+                        </el-form-item>
+
+                    </el-col>
+                </el-row>
+
+            </el-form>
+
+            <div slot="footer" class="dialog-footer">
+
+                <el-button @click="dialogFormVisible4Edit = false">取消</el-button>
+
+                <el-button type="primary" @click="handleEdit()">确定</el-button>
+
+            </div>
+
+        </el-dialog>
+    </div>
+    <div class="add-form">
+        <el-dialog title="新增学生" :visible.sync="dialogFormVisible">
+            <el-form ref="dataAddForm" :model="formData" label-position="right" label-width="100px">
+                <el-row>
+
+                    <el-col :span="12">
+
+                        <el-form-item label="班级" prop="classname">
+
+                            <el-input v-model="formData.classname"/>
+
+                        </el-form-item>
+
+                    </el-col>
+                    <el-col :span="12">
+
+                        <el-form-item label="姓名">
+
+                            <el-input v-model="formData.st_name" prop="st_name"></el-input>
+
+                        </el-form-item>
+
+                    </el-col>
+
+
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+
+                        <el-form-item label="楼号" prop="building_no">
+
+                            <el-input v-model="formData.building_no"/>
+
+                        </el-form-item>
+
+                    </el-col>
+
+                    <el-col :span="12">
+
+                        <el-form-item label="宿舍号">
+
+                            <el-input v-model="formData.dormitory_no" prop="dormitory_no"></el-input>
+
+                        </el-form-item>
+
+                    </el-col>
+                </el-row>
+            </el-form>
+
+            <div slot="footer" class="dialog-footer">
+
+                <el-button @click="dialogFormVisible = false">取消</el-button>
+
+                <el-button type="primary" @click="handleAdd()">确定</el-button>
+
+            </div>
+        </el-dialog>
+    </div>
+</div>
+</body>
+<script src="../plugins/elementui/index.js"></script>
+<script>
+    var vue = new Vue({
+        el: "#app",
+        data: {
+            pros: [],
+            type:"",
+            page: 1,
+            pageSize: 10,
+            counts: 0,
+            FuzzyData: [],
+            dialogFormVisible: false,
+            dialogFormVisible4Edit: false,
+            formData: {},
+        },
+		computed: {
+			listLength: function () {
+				return this.pros.length
+			}
+		},
+        created() {
+            let user = JSON.parse(localStorage.getItem("user"));
+            this.type = user.type;
+            if (user.type === 0){
+                this.select();
+            }else {
+                this.SelectByS_id(user.user)
+            }
+        },
+        methods: {
+
+            restFrom() {
+                this.formData = {};
+            },
+            async select() {
+                await getDormitoryApi({'page': this.page, 'pageSize': this.pageSize}).then((res) => {
+                    console.log(res);
+                    this.pros = res.data.records;
+                    this.counts = res.data.total;
+                })
+            },
+            async SelectByS_id() {
+                await getDormitoryByClassApi({'page': this.page, 'pageSize': this.pageSize}).then((res) => {
+                    if (res.code === 20041) {
+                        this.pros = res.data.records
+                        this.counts = Number(res.data.total)
+                    } else this.$message.error(res.data.msg);
+                })
+            },
+            handleSizeChange (val) {
+                this.pageSize = val
+                this.SelectByS_id()
+            },
+            handleCurrentChange (val) {
+                this.page = val
+                this.SelectByS_id()
+            },
+            showAddInput() {
+                this.dialogFormVisible = true;
+                this.restFrom();
+            },
+            handleUpdate(row) {
+                var i = parseInt(row.st_id)
+                axios.get("../dormitory/" + i).then((res) => {
+                    if (res.data.code === 20041) {
+                        this.pros = res.data.data;
+                        this.dialogFormVisible4Edit = true;
+                    } else this.$message.error(res.data.msg);
+                })
+            },
+            handleEdit() {
+                axios.put("../dormitory", this.formData).then((res) => {
+                    console.log(res.data);
+                    if (res.data.code === 20031) {
+                        this.dialogFormVisible4Edit = false;
+                        this.$message.success("修改成功");
+                    } else if (res.data.code === 20030) {
+                        this.$message.error("修改失败");
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
+                }).finally(() => {
+                    this.select();
+                });
+            },
+            handleDelete(row) {
+                //1.弹提示框
+                this.$confirm("此操作永久删除数据，是否继续？", "提示", {
+                    type: 'info'
+                }).then(() => {
+                    axios.delete("/Dormitory/" + row.st_id).then((res) => {
+                        if (res.data.code == 20021) {
+                            //2、做删除业务
+                            this.$message.success("删除成功")
+                        } else {
+                            this.$message.error("删除失败");
+                        }
+                    })
+                }).catch(() => {
+                    //3、取消删除操作
+                    this.$message.info("取消删除操作");
+                }).finally(() => {
+                    this.SelectByPro();
+                });
+            }
+        }
+    })
+</script>
+
+</html>

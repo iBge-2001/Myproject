@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>学生信息</title>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../styles/style.css">
+    <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+</head>
+<script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+<!-- 引入组件库 -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<body>
+<div id="a2">
+    <div class="a1" style="color: #6495ED;float:left;font-size: larger">~~学生信息~~
+    </div>
+    <div id="a4" v-if="isAdmin">
+        <div id="f1">
+            <input type="search" v-model="FuzzyData" id="s1" placeholder="请输入查询信息"/>
+            <el-button @click="SelectByFuzzy()" id="submit">搜索</el-button>
+            <el-button id="B2" @click="showAddInput()" style="font-size: large">添加学生</el-button>
+        </div>
+    </div>
+    <div  v-if="isAdmin">
+        <select v-model="Selection" @change="SelectByPro(Selection)" style="position: absolute;right:0">
+            <option disabled value="">请选择</option>
+            <option v-for="emp in emps" :value="emp.profession_name">{{emp.profession_name}}</option>
+        </select>
+    </div>
+    <el-table border="1" cellspacing="" label-width="10px" cellpadding="" size="small" current-row-key="id" :data="pros.slice((currentPage-1)*pageSize,currentPage*pageSize)"
+              stripe highlight-current-row>
+        <el-table-column prop="st_academy" label="院系" align="center"></el-table-column>
+        <el-table-column prop="st_class" label="班级" align="center"></el-table-column>
+        <el-table-column prop="st_id" label="学号" align="center"></el-table-column>
+        <el-table-column prop="st_name" label="姓名" align="center"></el-table-column>
+        <el-table-column prop="st_phnum" label="电话" align="center"></el-table-column>
+        <el-table-column prop="st_profession" label="专业" align="center"></el-table-column>
+        <el-table-column label="操作" align="center" v-if="isAdmin">
+            <template slot-scope="scope">
+                <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
+                <el-button type="danger" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <div style="text-align:center">
+        <el-pagination hide-on-single-page background layout="prev, pager, next,total" :total="listLength"
+                       :page-size="pageSize" @current-change="current_change"></el-pagination>
+    </div>
+    <div class="add-form">
+        <el-dialog title="编辑检查项" :visible.sync="dialogFormVisible4Edit">
+            <el-form ref="dataAddForm" :model="formData" label-position="right" label-width="100px">
+                <el-row>
+
+                    <el-col :span="12">
+
+                        <el-form-item label="院系" prop="st_academy">
+
+                            <el-input v-model="formData.st_academy"/>
+
+                        </el-form-item>
+
+                    </el-col>
+                    <el-col :span="12">
+
+                        <el-form-item label="专业">
+
+                            <el-input v-model="formData.st_profession" prop="st_profession"></el-input>
+
+                        </el-form-item>
+
+                    </el-col>
+
+
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+
+                        <el-form-item label="班级" prop="st_class">
+
+                            <el-input v-model="formData.st_class"/>
+
+                        </el-form-item>
+
+                    </el-col>
+
+                    <el-col :span="12">
+
+                        <el-form-item label="学号">
+
+                            <el-input v-model="formData.st_id" prop="st_id"></el-input>
+
+                        </el-form-item>
+
+                    </el-col>
+                </el-row>
+
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="姓名">
+                            <el-input v-model="formData.st_name" prop=="st_name"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+
+                        <el-form-item label="电话">
+
+                            <el-input v-model="formData.st_phnum" prop="st_phnum"></el-input>
+
+                        </el-form-item>
+
+                    </el-col>
+
+                </el-row>
+            </el-form>
+
+            <div slot="footer" class="dialog-footer">
+
+                <el-button @click="dialogFormVisible4Edit = false">取消</el-button>
+
+                <el-button type="primary" @click="handleEdit()">确定</el-button>
+
+            </div>
+
+        </el-dialog>
+    </div>
+    <div class="add-form">
+        <el-dialog title="新增学生" :visible.sync="dialogFormVisible">
+            <el-form ref="dataAddForm" :model="formData" label-position="right" label-width="100px">
+                <el-row>
+
+                    <el-col :span="12">
+
+                        <el-form-item label="院系" prop="st_academy">
+
+                            <el-input v-model="formData.st_academy"/>
+
+                        </el-form-item>
+
+                    </el-col>
+                    <el-col :span="12">
+                            <el-form-item label="专业">
+                                <el-select v-model="formData.st_profession" placeholder="请选择专业">
+                                    <el-option  v-for="emp in emps" :value="emp.profession_name">{{emp.profession_name}}</el-option>
+                                </el-select>
+                            </el-form-item>
+                    </el-col>
+
+
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="班级">
+                            <el-select v-model="formData.st_class" placeholder="请选择班级">
+                                <el-option  v-for="classname in classnames" :value="classname">{{classname}}</el-option>
+                            </el-select>
+                        </el-form-item>
+
+                    </el-col>
+
+                    <el-col :span="12">
+
+                        <el-form-item label="学号">
+
+                            <el-input v-model="formData.st_id" prop="st_id"></el-input>
+
+                        </el-form-item>
+
+                    </el-col>
+                </el-row>
+
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="姓名">
+                            <el-input v-model="formData.st_name" prop=="st_name"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+
+                        <el-form-item label="电话">
+
+                            <el-input v-model="formData.st_phnum" prop="st_phnum"></el-input>
+
+                        </el-form-item>
+
+                    </el-col>
+
+                </el-row>
+            </el-form>
+
+            <div slot="footer" class="dialog-footer">
+
+                <el-button @click="dialogFormVisible = false">取消</el-button>
+
+                <el-button type="primary" @click="handleAdd()">确定</el-button>
+
+            </div>
+        </el-dialog>
+    </div>
+</div>
+<script src="../plugins/elementui/index.js"></script>
+<script>
+    var vue = new Vue({
+        el: '#a2',
+        data: {
+            FuzzyData: "",
+            formData: {},
+            emps: [],
+            classnames:[],
+            Selection: "",
+            pros: [],//表格绑定的数据
+            dialogFormVisible: false,
+            dialogFormVisible4Edit: false,
+            pageSize: 10,//指定展示多少条
+            currentPage: 1,//当前页码
+            isAdmin:true
+        },
+        created() {
+
+            let user = JSON.parse(localStorage.getItem("user"));
+            if (user.type === 1){
+                this.GetSelectProfession();
+                this.GetClassName();
+            }else {
+                this.isAdmin = false
+                this.SelectByS_id(user.id)
+            }
+        },
+        computed: {
+            listLength: function () {
+                return this.pros.length
+            }
+        },
+        methods: {
+            current_change(currentPage) {
+                this.currentPage = currentPage;
+            },
+            restFrom() {
+                this.formData = {};
+            },
+            GetSelectProfession() {
+                axios.get("../profession").then((res) => {
+                    this.emps = res.data.data;
+                })
+            },
+            GetClassName(){
+                axios.get("../profession/class").then((res)=>{
+                    this.classnames = res.data.data;
+                    console.log(this.classname);
+                })
+            },
+            SelectByPro() {
+                axios.get("../profession/" + this.Selection).then((res) => {
+                    console.log(res.data.data);
+                    this.pros = res.data.data;
+                })
+            },
+            SelectByS_id(student_id) {
+                axios.get("../profession/OneStudent/" + student_id).then((res) => {
+                    console.log(res.data.data);
+                    this.pros = res.data.data;
+                })
+            },
+            SelectByFuzzy() {
+                alert(this.FuzzyData);
+                axios.get("../students/FuzzySelect/" + this.FuzzyData).then((res) => {
+                    console.log(res.data.data);
+                    this.pros = res.data.data;
+                })
+            },
+            showAddInput() {
+                this.dialogFormVisible = true;
+                this.restFrom();
+            },
+            handleUpdate(row) {
+                alert(row);
+                axios.get("../students/" + row.st_id).then((res) => {
+                    if (res.data.code === 20041) {
+                        this.formData = res.data.data;
+                        this.dialogFormVisible4Edit = true;
+                    } else this.$message.error(res.data.msg);
+
+                })
+            },
+            handleAdd() {
+                axios.post("../students", this.formData).then((res) => {
+                    console.log(res.data);
+                    // //如果操作成功，关闭弹层
+                    // this.dialogFormVisible=false;
+                    // //显示数据
+                    // this.getAll();
+                    if (res.data.code === 20011) {
+                        this.dialogFormVisible = false;
+                        this.$message.success("添加成功");
+                        this.SelectByPro();
+                    } else if (res.data.code === 20010) {
+                        this.$message.error("添加失败");
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
+                }).finally(() => {
+                    this.SelectByPro();
+                });
+            },
+            handleEdit() {
+                axios.put("../students", this.formData).then((res) => {
+                    console.log(res.data);
+                    if (res.data.code === 20031) {
+                        this.dialogFormVisible4Edit = false;
+                        this.$message.success("修改成功");
+                    } else if (res.data.code === 20030) {
+                        this.$message.error("修改失败");
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
+                }).finally(() => {
+                    this.SelectByPro();
+                });
+
+            },
+            // 删除
+            handleDelete(row) {
+                //1.弹提示框
+                this.$confirm("此操作永久删除数据，是否继续？", "提示", {
+                    type: 'info'
+                }).then(() => {
+                    axios.delete("/students/" + row.st_id).then((res) => {
+                        if (res.data.code == 20021) {
+                            //2、做删除业务
+                            this.$message.success("删除成功");
+                            this.SelectByPro();
+                        } else {
+                            this.$message.error("删除失败");
+                        }
+                    })
+                }).catch(() => {
+                    //3、取消删除操作
+                    this.$message.info("取消删除操作");
+                }).finally(() => {
+                    this.SelectByPro();
+                });
+            }
+
+        }
+
+    })
+
+</script>
+</body>
+
+</html>

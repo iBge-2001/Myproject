@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>用户信息</title>
+		<script src="//unpkg.com/element-ui@2.15.13/lib/index.js"></script>
+		<script src="../js/vue.js"></script>
+		<script src="../js/axios-0.18.0.js"></script>
+		<script src="../plugins/elementui/index.js"></script>
+		<link rel="stylesheet" href="../plugins/elementui/index.css">
+		<link rel="stylesheet" href="//unpkg.com/element-ui@2.15.13/lib/theme-chalk/index.css">
+		<script src="../plugins/elementui/index.js"></script>
+		<script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+<!--		<script src="../api/student.js"></script>-->
+		<script src="../js/request.js"></script>
+		<script src="../api/login.js"></script>
+		<script src="../plugins/axios/axios.min.js"></script>
+		<!-- 引入组件库 -->
+		<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+	</head>
+	<body>
+	<div id="app">
+		<div id="a1">
+			<h2>~~用户信息~~</h2>
+		</div>
+		<div id="t1">
+					<el-table  border="1" cellspacing="" label-width="10px"  cellpadding="" size="small" current-row-key="id" :data="UserList" stripe highlight-current-row>
+						<el-table-column prop="user" label="用户名" align="center" ></el-table-column>
+<!--						<el-table-column prop="password" label="密码" align="center"></el-table-column>-->
+						<el-table-column label="账号状态">
+							<template slot-scope="scope">
+								{{ String(scope.row.status) === '0' ? '已禁用' : '正常' }}
+							</template>
+						</el-table-column>
+						<el-table-column label="状态管理" width="160" align="center">
+							<template slot-scope="scope">
+								<el-button type="text" size="small" @click="statusHandle(scope.row)">
+									{{ scope.row.status == '1' ? '禁用' : '启用' }}
+								</el-button>
+							</template>
+						</el-table-column>
+						<el-table-column prop="updateTime" label="操作时间">
+							<template slot-scope="scope">{{scope.row.updateTime}}</template>
+						</el-table-column>
+						<el-table-column label="操作" align="center">
+							<template slot-scope="scope">
+								<el-button type="primary" size="mini" @click="handleUpdate(scope.row)">修改密码</el-button>
+								<el-button type="danger" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+
+		</div>
+		<div class="add-form">
+			<el-dialog title="编辑检查项" :visible.sync="dialogFormVisible4Edit">
+				<el-form ref="form" :model="form" label-width="50%">
+					<el-form-item label="输入密码">
+						<el-input  type="password" v-model="form.newPassword" style="width: 60%" ></el-input>
+					</el-form-item>
+					<el-form-item label="再次确认密码" >
+						<el-input type="password" v-model="form.rePassword" style="width: 60%"></el-input>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" @click="confirmUpdate">立即修改</el-button>
+						<el-button @click="dialogFormVisible4Edit = false">取消</el-button>
+					</el-form-item>
+				</el-form>
+			</el-dialog>
+		</div>
+	</div>
+		<script >
+			var vue =new Vue({
+				el:"#app",
+				data:{
+					UserList:[],
+					dialogFormVisible4Edit:"",
+					form:{}
+				},
+				created(){
+					 this.getAllUser();
+					 this.dialogFormVisible4Edit = false;
+				},
+				methods: {
+					getAllUser() {
+						axios.get("/user/all").then((res) => {
+							if (res.data.code === 20041) {
+								this.UserList = res.data.data;
+							} else this.$message.error(res.data.msg);
+						})
+					},
+					handleUpdate(row) {
+						console.log(row);
+						axios.get("/user/one/" + row.user).then((res) => {
+							if (res.data.code === 20041) {
+								this.form = res.data.data;
+								this.dialogFormVisible4Edit = true;
+							} else this.$message.error(res.data.msg);
+						});
+					},
+					confirmUpdate(){
+						if (this.form.newPassword===this.form.rePassword){
+							this.form.password = this.form.rePassword;
+						updateApi(this.form).then((res) => {
+								console.log(this.form);
+								if (res.code === 20031) {
+									this.$message.success("修改成功！！");
+									this.dialogFormVisible4Edit=false;
+								}
+							}).finally(()=>{
+								this.getAllUser();
+							})
+						} else {
+							this.$message.error("密码不一致，请检查输入的密码是否相同");
+						}
+					},
+					statusHandle (row) {
+						this.user = row.user
+						this.status = row.status
+						this.$confirm('确认调整该账号的状态?', '提示', {
+							'confirmButtonText': '确定',
+							'cancelButtonText': '取消',
+							'type': 'warning'
+						}).then(() => {
+							console.log(this.user)
+							console.log(this.status)
+							enableOrDisableUser({ 'user': this.user, 'status': !this.status ? 1 : 0 }).then(res => {
+								console.log('enableOrDisableUser',res)
+								if (res.code === 20031) {
+									this.$message.success('账号状态更改成功！')
+									this.getAllUser();
+								}
+							}).catch(err => {
+								this.$message.error('请求出错了：' + err)
+							})
+						})
+					},
+					handleDelete(row){
+						this.$confirm("此操作永久删除数据，是否继续？", "提示", {
+							type: 'info'
+						}).then(() => {
+							console.log(row.user);
+							axios.delete("/user/" +row.user).then((res) => {
+								console.log(res)
+								if (res.data.code == 20021) {
+									//2、做删除业务
+									this.$message.success("删除成功");
+								} else {
+									this.$message.error("删除失败");
+								}
+							})
+						}).catch(() => {
+							//3、取消删除操作
+							this.$message.info("取消删除操作");
+						}).finally(() => {
+							this.getAllUser();
+						});
+
+					}
+				}
+			})
+		</script>
+	</body>
+</html>

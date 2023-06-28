@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>成绩排名</title>
+    <style type="text/css">
+        #a1 {
+            width: 30%;
+            height: 90px;
+            float: left;
+            color: #6495ED;
+            font-size: larger;
+        }
+
+        #a2 {
+            width: 100%;
+            height: 40px;
+            text-align: right;
+            padding-top: 1px;
+        }
+
+        #table {
+            width: 90%;
+            text-align: center;
+            border-color: #6495ED;
+            border: 0px solid #6495ED;
+        }
+
+        .table {
+            width: 90%;
+            float: left;
+        }
+
+        th {
+            border: 1px solid ghostwhite;
+        }
+
+        th {
+            height: 40px;
+            background-color: #6495ED;
+        }
+
+        td {
+            border: 1px solid floralwhite;
+            height: 30px;
+        }
+
+        tr:hover {
+            background-color: #999999;
+            height: 37px;
+        }
+
+
+        select {
+            height: 40px;
+            border: 2px solid #000000;
+            border-radius: 3px 3px 3px 3px;
+            margin-right: 40px;
+            margin-left: 20px;
+        }
+
+        input {
+            width: 85%;
+            height: 25px;
+            border-radius: 6px 6px 6px 6px;
+            margin-top: 10px;
+        }
+
+        #btn_add :hover {
+            color: #999999;
+        }
+
+        #btn_ext :hover {
+            color: antiquewhite;
+        }
+
+        #h3 :hover {
+            background-color: #DCDCDC;
+        }
+
+        #B2 {
+            height: 40px;
+            text-decoration: none;
+            background-color: #6495ED;
+            border: 1px solid #000000;
+            margin-right: 10%
+        }
+
+        .a10 .a9 {
+            width: 70px;
+            height: 20px;
+            background-color: #fff;
+            position: absolute;
+            left: 200px;
+            bottom: 0px;
+        }
+
+    </style>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+    <script src="../api/student.js"></script>
+    <script src="../js/request.js"></script>
+</head>
+<body>
+
+<div id="a2">
+    <div id="a1">
+        <h2 style="float: left">~~成绩排名~~</h2>
+    </div>
+    <div>
+        <select v-model="Selection" @change="init(Selection)" style="position: fixed;right:0">
+            <option disabled value="计算机">计算机</option>
+            <option v-for="emp in emps" :value="emp.pname">{{emp.pname}}</option>
+        </select>
+    </div>
+    <div class="table">
+        <table border="1" style="text-align:center" id="table" cellspacing="0">
+            <el-table @sort-change="sortChange" border="1" cellspacing="" label-width="10px" cellpadding="" size="small" current-row-key="id"
+                      :data="grades" stripe highlight-current-row>
+                <el-table-column label="序号" align="center">
+                    <template slot-scope='scope'>
+                        {{grades.indexOf(scope.row)+1}}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="sid" label="学号" align="center"></el-table-column>
+                <el-table-column prop="sname" label="姓名" align="center"></el-table-column>
+                <el-table-column v-for="(value,index) in course" :label="value.cname" :prop="value.cname" align="center" sortable="custom" >
+                    <template slot-scope='scope'>
+                        {{Number(scope.row.cg[index].grade)}}
+<!--                        {{scope.row}}-->
+                    </template>
+                </el-table-column>
+                <el-table-column prop="avg" label="平均分" align="center" sortable="custom"></el-table-column>
+                <el-table-column prop="sum" label="总分" align="center" sortable="custom"></el-table-column>
+            </el-table>
+            <el-pagination
+                    class="pageList"
+                    :page-sizes="[10, 20, 30, 40]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="counts"
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+            ></el-pagination>
+        </table>
+    </div>
+</div>
+
+<script src="../plugins/elementui/index.js"></script>
+<script type="text/javascript">
+
+    var vue = new Vue({
+        el: '#a2',
+        data: {
+            emps: [],
+            Selection: "计算机",
+            classnames:[],
+            pros: [],
+            grades: [],
+            course:[],
+            page: 1,
+            pageSize: 10,
+            counts: 0,
+            dialogFormVisible4Edit: false,
+            dialogFormVisible4Add: false,
+            formData: [{
+                "st_id": "",
+                "course": "",
+                "grade": "",
+            }, {
+                "st_id": "",
+                "course": "",
+                "grade": "",
+            }, {
+                "st_id": "",
+                "course": "",
+                "grade": "",
+            },],
+        },
+        computed: {
+            listLength: function () {
+                return this.grades.length
+            }
+        },
+        created() {
+            this.GetSelectProfession();
+            this.SelectCourseByPro();
+            this.SelectgradeBycourse();
+        },
+        methods: {
+            sortChange(column){
+                console.log(column.prop)
+                if (column.prop === null) return;
+                //按总分排序
+                if (column.prop === "sum"){
+                    if (column.order === "descending"){
+                        this.grades = this.grades.sort((a,b)=>{
+                            return Number(a.sum) - Number(b.sum)
+                        })
+                    }else if(column.order === "ascending"){
+                        this.grades = this.grades.sort((a,b)=>{
+                            return Number(b.sum) - Number(a.sum)
+                        })
+                    }
+                    return;
+                }
+                //按平均分排序
+                if (column.prop === "avg"){
+                    if (column.order === "descending"){
+                        this.grades = this.grades.sort((a,b)=>{
+                            return Number(a.avg) - Number(b.avg)
+                        })
+                    }else if(column.order === "ascending"){
+                        this.grades = this.grades.sort((a,b)=>{
+                            return Number(b.avg) - Number(a.avg)
+                        })
+                    }
+                    return;
+                }
+                //按选的科目排序
+                let i = 0
+                for (i ;i<this.pros.length;i++){
+                    if (column.prop === this.pros[i]){
+                        break;
+                    }
+                }
+                if (column.order === "descending"){
+                    this.grades = this.grades.sort((a,b)=>{
+                        return Number(a.cg[i].grade) - Number(b.cg[i].grade)
+                    })
+                }else if(column.order === "ascending"){
+                    this.grades = this.grades.sort((a,b)=>{
+                        return Number(b.cg[i].grade) - Number(a.cg[i].grade)
+                    })
+                }
+            },
+            showAddInput() {
+                this.dialogFormVisible4Add = "true";
+            },
+            handleSizeChange (val) {
+                this.pageSize = val
+                this.init()
+            },
+            handleCurrentChange (val) {
+                this.page = val
+                this.init()
+            },
+            GetSelectProfession() {
+                axios.get("../academy/profession/").then((res) => {
+                    this.emps = res.data.data;
+                })
+            },
+            async init (Selection) {
+                await getGradeByPApi({'page': this.page, 'pageSize': this.pageSize,'selection':this.Selection}).then(res => {
+                    if (String(res.code) === '20041') {
+                        this.grades = res.data.records
+                        this.course = this.grades[0].cg
+                        this.counts = Number(res.data.total)
+                        console.log(this.counts)
+                    } else {
+                        this.$message.error('操作失败')
+                    }
+                }).catch(err => {
+                    this.$message.error('请求出错了：' + err)
+                })
+            },
+
+            handleUpdate(row) {
+                console.log(row);
+                axios.get("../Grade/grade/" + row.st_id).then((res) => {
+                    if (res.data.code === 20041) {
+                        this.formData = res.data.data;
+                        this.formData.length = res.data.data.length;
+                        this.dialogFormVisible4Edit = true;
+                    } else this.$message.error(res.data.msg);
+                })
+            },
+            handleAdd() {
+                console.log(this.formData);
+                axios.post("../Grade", this.formData).then((res) => {
+                    console.log(res.data);
+                    if (res.data.code === 20011) {
+                        this.dialogFormVisible4Add = false;
+                        this.$message.success("添加成功");
+                    } else if (res.data.code === 20010) {
+                        this.$message.error("添加失败");
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
+                }).finally(() => {
+                    this.SelectgradeBycourse();
+                });
+            },
+            handleEdit() {
+                console.log(this.formData);
+                axios.put("../Grade", this.formData).then((res) => {
+                    if (res.data.code === 20031) {
+                        this.dialogFormVisible4Edit = false;
+                        this.$message.success("编辑成功");
+                    } else if (res.data.code === 20030) {
+                        this.$message.error("编辑失败");
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
+                }).finally(() => {
+                    this.SelectgradeBycourse();
+                });
+            },
+            handleDelete(row) {
+                //1.弹提示框
+                this.$confirm("此操作永久删除数据，是否继续？", "提示", {
+                    type: 'info'
+                }).then(() => {
+                    axios.delete("/Grade/" + row.st_id).then((res) => {
+                        if (res.data.code == 20021) {
+                            //2、做删除业务
+                            this.$message.success("删除成功")
+                        } else {
+                            this.$message.error("删除失败");
+                        }
+                    })
+                }).catch(() => {
+                    //3、取消删除操作
+                    this.$message.info("取消删除操作");
+                }).finally(() => {
+                    this.SelectgradeBycourse();
+                });
+            }
+        }
+    })
+</script>
+</body>
+</html>

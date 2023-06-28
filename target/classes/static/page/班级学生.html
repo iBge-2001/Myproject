@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="//unpkg.com/element-ui@2.15.13/lib/index.js"></script>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="//unpkg.com/element-ui@2.15.13/lib/theme-chalk/index.css">
+    <script src="../plugins/elementui/index.js"></script>
+    <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+    <script src="../api/class.js"></script>
+    <script src="../api/student.js"></script>
+    <script src="../js/request.js"></script>
+    <script src="../plugins/axios/axios.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="app">
+    <div>
+    <div class="a1" style="color:#6495ED;height: 100px">~~班级信息~~</div>
+
+        <select v-model="Selection" @change="SelectByClass(Selection)" style="position: fixed;right:0;top: 0px">
+            <option disabled value="">请选择</option>
+            <option v-for="emp in emps" :value="emp">{{emp}}</option>
+        </select>
+        <div id="con">
+            <el-button
+                    type="primary"
+                    @click="addMemberHandle('add')"
+            >
+                + 添加学生
+            </el-button>
+        </div>
+    </div>
+    <div>
+            <el-table border="1" cellspacing="0" cellpadding="" size="small" current-row-key="id" :data="pros" stripe highlight-current-row>
+                <el-table-column prop="sid" align="center" label="学号"></el-table-column>
+                <el-table-column prop="sname" label="姓名" align="center"></el-table-column>
+                <el-table-column prop="ssex" label="性别" align="center">
+                    <template slot-scope="scope">
+                        <span>{{ scope.row.ssex == '1' ? '男': '女' }}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="sage" label="年龄"></el-table-column>
+                <el-table-column label="操作" align="center" >
+                    <template slot-scope="scope">
+                        <el-button type="primary" size="mini" @click="addMemberHandle(scope.row)">编辑</el-button>
+                        <el-button type="danger" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-pagination
+                    class="pageList"
+                    :page-sizes="[10, 20, 30, 40]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="counts"
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+            ></el-pagination>
+    </div>
+    <div class="add-form">
+        <el-dialog  :visible.sync="dialogFormVisible4">
+            <el-form ref="dataAddForm" :model="formData" label-position="right" label-width="100px">
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="专业号" prop="formData.spid">
+                            <el-input v-model="formData.spid"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="班级号" prop="formData.classid">
+                            <el-input v-model="formData.classid"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="学号" prop="formData.sid">
+                            <el-input v-model="formData.sid"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="姓名" prop="formData.sname">
+                            <el-input v-model="formData.sname"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                            <el-form-item label="性别" prop="ssex">
+                                <el-radio-group v-model="formData.ssex">
+                                    <el-radio label="男"></el-radio>
+                                    <el-radio label="女"></el-radio>
+                                </el-radio-group>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="年龄" prop="formData.sage">
+                            <el-input v-model="formData.sage"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+
+                <el-button @click="dialogFormVisible4 = false">取消</el-button>
+
+                <el-button type="primary" @click="handleSelect()">确定</el-button>
+
+            </div>
+        </el-dialog>
+
+    </div>
+</div>
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            formData: {},
+            emps: [],
+            Selection: "",
+            pros: [],//表格绑定的数据
+            currentControl:"",
+            page: 1,
+            pageSize: 10,
+            counts: 0,
+            dialogFormVisible4:false,
+        },
+        created() {
+            this.GetSelectAcademy();
+        },
+        computed: {
+        },
+        methods: {
+            GetSelectAcademy() {
+                axios.get("../class/classname/").then((res) => {
+                    this.emps = res.data.data;
+                    this.Selection = this.emps[0];
+                    this.SelectByClass();
+                })
+            },
+            handleSizeChange (val) {
+                this.pageSize = val
+                this.SelectByClass()
+            },
+            handleCurrentChange (val) {
+                this.page = val
+                this.SelectByClass()
+            },
+            async SelectByClass() {
+                await getClassStudentApi({'page': this.page, 'pageSize': this.pageSize,'classname':this.Selection}).then(res => {
+                    if (res.code === 20041) {
+                        this.pros = res.data.records
+                        console.log(this.pros)
+                        this.counts = Number(res.data.total)
+                        console.log(this.counts)
+                    } else {
+                        this.$message.error('操作失败')
+                    }
+                }).catch(err => {
+                    this.$message.error('请求出错了：' + err)
+                })
+            },
+            addMemberHandle(st) {
+                console.log(st)
+                if (st === 'add') {
+                    this.currentControl = 0
+                    this.dialogFormVisible4 = true;
+                } else {
+                    console.log(st.sid)
+                    getStudentByIdApi(st.sid).then((res => {
+                        alert(1111111111)
+                        if (res.code === 20041) {
+                            this.formData=res.data;
+                            this.formData.ssex = res.data.ssex === '1' ? '男' : '女'
+                            console.log(this.formData)
+                        } else if (res.code === 20040) {
+                            this.$message.error("res.msg")
+                        }
+                    }))
+                    this.currentControl = 1
+                    this.dialogFormVisible4 = true;
+                }
+
+            },
+            handleSelect() {
+                if (this.currentControl === 0 ) {
+                    this.formData.ssex = this.formData.ssex === '男' ? '1' : '2'
+                    const params = this.formData
+                    addStudent(params).then(res => {
+                        if (res.code === 20011) {
+                            this.$message.success('添加成功！')
+                            this.dialogFormVisible4 = false
+                        } else {
+                            this.$message.error(res.msg || '操作失败')
+                        }
+                    }).catch(err => {
+                        this.$message.error('请求出错了：' + err)
+                    }).finally(()=>{
+                        this.SelectByClass();
+                    })
+                } else {
+                    this.handleEdit();
+                }
+            },
+            handleEdit() {
+                console.log(this.formData);
+                this.formData.ssex = this.formData.ssex === '男' ? '1' : '2'
+                axios.put("../student/update", this.formData).then((res) => {
+                    if (res.data.code === 20031) {
+                        this.$message.success("编辑成功");
+                        this.SelectByClass();
+                    } else if (res.data.code === 20030) {
+                        this.$message.error("编辑失败");
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
+                }).finally(() => {
+                    this.dialogFormVisible4 = false;
+                    this.formData={};
+                    this.SelectByClass();
+                });
+            },
+            // 删除
+            handleDelete(row) {
+                //1.弹提示框
+                this.$confirm("此操作永久删除数据，是否继续？", "提示", {
+                    type: 'info'
+                }).then(() => {
+                    axios.delete("/student/" + row.sid).then((res) => {
+                        if (res.data.code == 20021) {
+                            //2、做删除业务
+                            this.$message.success("删除成功");
+                        } else {
+                            this.$message.error("删除失败");
+                        }
+                    })
+                }).catch(() => {
+                    //3、取消删除操作
+                    this.$message.info("取消删除操作");
+                }).finally(() => {
+                    this.GetSelectAcademy();
+                    this.SelectByAcademy();
+                });
+            }
+        }
+
+
+    })
+
+</script>
+</body>
+</html>

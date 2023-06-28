@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <script src="//unpkg.com/element-ui@2.15.13/lib/index.js"></script>
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios-0.18.0.js"></script>
+    <script src="../plugins/elementui/index.js"></script>
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="//unpkg.com/element-ui@2.15.13/lib/theme-chalk/index.css">
+    <script src="../plugins/elementui/index.js"></script>
+    <script type="text/javascript" src="../js/jquery1.8.3.min.js"></script>
+    <script src="../api/academy.js"></script>
+    <script src="../js/request.js"></script>
+    <script src="../plugins/axios/axios.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="app">
+    <div id="a1">
+        <h2 style="float: left;color: #0abdfe">~~学院信息~~</h2>
+    </div>
+    <div id="con">
+        <el-button
+                type="primary"
+                @click="addMemberHandle('add')"
+                v-if="type === 0"
+        >
+            + 添加专业
+        </el-button>
+    </div>
+    <div >
+        <select v-model="Selection" @change="SelectByAcademy(Selection)" style="position: fixed;right:0">
+            <option disabled value="">请选择</option>
+                <option v-for="emp in emps" :value="emp">{{emp}}</option>
+        </select>
+    </div>
+    <div id="t1">
+        <el-table :data="pros"
+                  stripe highlight-current-row>
+            <el-table-column prop="pid" label="专业代码" align="center"></el-table-column>
+            <el-table-column prop="pname" label="专业" align="center"></el-table-column>
+            <el-table-column prop="aid" label="学院代码" align="center"></el-table-column>
+            <el-table-column prop="academy" label="学院" align="center"></el-table-column>
+            <el-table-column prop="instructor" label="辅导员" align="center"></el-table-column>
+            <el-table-column label="操作" align="center" v-if="type === 0 ">
+                <template slot-scope="scope">
+                    <el-button type="primary" size="mini" @click="addMemberHandle(scope.row)">编辑</el-button>
+                    <el-button type="danger" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-pagination
+                class="pageList"
+                :page-sizes="[10, 20, 30, 40]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="counts"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+        ></el-pagination>
+    </div>
+    <div class="add-form">
+        <el-dialog  :visible.sync="dialogFormVisible4">
+            <el-form ref="dataAddForm" :model="formData" label-position="right" label-width="100px">
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="专业代码" prop="formData.pid">
+                            <el-input v-model="formData.pid"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="专业" prop="formData.pname">
+                            <el-input v-model="formData.pname"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="学院代码" prop="formData.aid">
+                            <el-input v-model="formData.aid"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="学院" prop="formData.academy">
+                            <el-input v-model="formData.academy"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="辅导员" prop="formData.instructor">
+                            <el-input v-model="formData.instructor"/>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+
+                <el-button @click="dialogFormVisible4 = false">取消</el-button>
+
+                <el-button type="primary" @click="handleSelect()">确定</el-button>
+
+            </div>
+        </el-dialog>
+
+    </div>
+</div>
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            formData: {},
+            emps: [],
+            Selection: "",
+            pros: [],//表格绑定的数据
+            type:"",
+            currentControl:"",
+            page: 1,
+            pageSize: 10,
+            counts: 0,
+            dialogFormVisible4:false,
+        },
+        created() {
+            let user = JSON.parse(localStorage.getItem("user"));
+            this.type = user.type
+            this.GetSelectAcademy();
+        },
+        computed: {
+
+        },
+        methods: {
+            GetSelectAcademy() {
+                axios.get("../academy/").then((res) => {
+                    this.emps = res.data.data;
+                    this.Selection = this.emps[0];
+                    this.SelectByAcademy();
+                })
+            },
+            handleSizeChange (val) {
+                this.pageSize = val
+                this.SelectByAcademy()
+            },
+            handleCurrentChange (val) {
+                this.page = val
+                this.SelectByAcademy()
+            },
+            async SelectByAcademy() {
+                await getByAcademyApi({'page': this.page, 'pageSize': this.pageSize,'selection':this.Selection}).then(res => {
+                    if (res.code === 20041) {
+                        this.pros = res.data.records
+                        console.log(this.pros)
+                        this.counts = Number(res.data.total)
+                        console.log(this.counts)
+                    } else {
+                        this.$message.error('操作失败')
+                    }
+                }).catch(err => {
+                    this.$message.error('请求出错了：' + err)
+                })
+            },
+            addMemberHandle(st) {
+                console.log(st)
+                if (st === 'add') {
+                    this.currentControl = 0
+                    this.dialogFormVisible4 = true;
+                } else {
+                    queryAcademyByAid(st.aid).then(res => {
+                        console.log(res)
+                        if (res.code === 20041) {
+                            console.log(res.data)
+                            this.formData = res.data
+                        } else {
+                            this.$message.error(res.msg || '操作失败')
+                        }
+                    })
+                    this.currentControl = 1
+                    this.dialogFormVisible4 = true;
+                }
+            },
+            handleSelect() {
+                if (this.currentControl === 0 ) {
+                    axios.post("../academy", this.formData).then(res => {
+                        alert(111111111)
+                        console.log(res)
+                        if (res.data.code === 20011) {
+                            this.$message.success(res.data.data)
+                        } else {
+                            this.$message.error(res.msg || '操作失败')
+                        }
+                    }).catch(err => {
+                        this.$message.error('请求出错了：' + err)
+                    }).finally(()=>{
+                        this.GetSelectAcademy();
+                        this.SelectByAcademy();
+                        this.dialogFormVisible4 = false;
+                    })
+                } else {
+                    this.handleEdit();
+                }
+            },
+            handleEdit() {
+                console.log(this.formData);
+                axios.put("../academy", this.formData).then((res) => {
+                    if (res.data.code === 20031) {
+                        this.$message.success("编辑成功");
+                    } else if (res.data.code === 20030) {
+                        this.$message.error("编辑失败");
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
+                }).finally(() => {
+                    this.dialogFormVisible4 = false;
+                    this.formData={};
+                    this.SelectByAcademy();
+                });
+            },
+            // 删除
+            handleDelete(row) {
+                //1.弹提示框
+                this.$confirm("此操作永久删除数据，是否继续？", "提示", {
+                    type: 'info'
+                }).then(() => {
+                    axios.delete("/academy/" + row.aid).then((res) => {
+                        if (res.data.code == 20021) {
+                            //2、做删除业务
+                            this.$message.success("删除成功");
+                        } else {
+                            this.$message.error("删除失败");
+                        }
+                    })
+                }).catch(() => {
+                    //3、取消删除操作
+                    this.$message.info("取消删除操作");
+                }).finally(() => {
+                    this.GetSelectAcademy();
+                    this.SelectByAcademy();
+                });
+            }
+        }
+    })
+
+</script>
+</body>
+</html>

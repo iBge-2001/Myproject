@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<!--班级信息，可以修班级信息，添加班级信息：必须添加已存在专业的班级：使用下拉框选择-->
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>班级信息</title>
+		<style type="text/css">
+			#a1{float: left;width: 150px;height: 50px}
+			#a2{width: 100%;height: 40px;float: left;text-align: right;padding-top: 45px;z-index: 1;}
+			th{border: 1px solid #000000;}
+			th{height: 40px;background-color: #6495ED;}
+			td{border: 1px solid #000000;height: 30px;}
+			tr:hover{background-color: #DCDCDC;height: 37px;}
+			select{height: 40px;border: 2px solid #000000;border-radius: 3px 3px 3px 3px;
+			margin-right: 40px;margin-left: 20px;
+			}
+			#form1{width: auto;height: auto; font-size: larger;padding-left: 20px;margin-top: 0px;}
+			input{width: 65%;height: 25px;border-radius: 6px 6px 6px 6px;margin-top: 10px;}
+			#h4{width: 94%;float: left;padding-top: 15px;font-size: larger;height: 30px;padding-left: 0px;border-radius: 0px 0px 50% 50%/0px 0px 40px 40px;background-color: #6495ED;}
+			#h3 :hover{background-color: #DCDCDC;}
+
+		</style>
+		<script src="../js/vue.js"></script>
+		<script src="../js/axios-0.18.0.js"></script>
+		<link rel="stylesheet" href="../plugins/elementui/index.css">
+		<link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="../css/style.css">
+		<script src="../api/class.js"></script>
+		<script src="../js/request.js"></script>
+	</head>
+	<body>
+		<div id="a2">
+			<div id="a1" style="color: #6495ED;font-size: larger">~~班级信息~~</div>
+			<div >
+
+				<el-button id="B2" @click="showAddInput()" style="font-size: large;margin-right:10%">添加班级</el-button>
+			</div>
+			<div>
+				<el-table border="1" cellspacing="0" cellpadding="" size="small" current-row-key="id" :data="pros" stripe highlight-current-row>
+					<el-table-column prop="classid" align="center" label="班级号"></el-table-column>
+					<el-table-column prop="classname" label="班级名称" align="center"></el-table-column>
+					<el-table-column prop="cteacher" label="班主任" align="center"></el-table-column>
+					<el-table-column prop="pid" label="专业号" align="center"></el-table-column>
+					<el-table-column prop="count" label="人数" align="center"></el-table-column>
+					<el-table-column prop="classid" label="操作" align="center">
+						<template slot-scope="scope">
+							<el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
+							<el-button type="danger" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+						</template>
+					</el-table-column>
+				</el-table>
+				<el-pagination
+						class="pageList"
+						:page-sizes="[10, 20, 30, 40]"
+						:page-size="pageSize"
+						layout="total, sizes, prev, pager, next, jumper"
+						:total="counts"
+						@size-change="handleSizeChange"
+						@current-change="handleCurrentChange"
+				></el-pagination>
+			</div>
+			<div class="add-form">
+				<el-dialog  :visible.sync="dialogFormVisible">
+					<div  >~~请添加信息~~</div>
+					<el-form  ref="dataAddForm" :model="formData"  label-position="right" label-width="100px">
+						<el-row>
+
+							<el-col :span="12">
+
+								<el-form-item label="班级号（请确保未重复）" prop="classid">
+
+									<el-input v-model="formData.classid"/>
+
+								</el-form-item>
+
+							</el-col>
+							<el-col :span="12">
+
+								<el-form-item label="班级名称">
+
+									<el-input v-model="formData.classname" prop="classname"></el-input>
+
+								</el-form-item>
+
+							</el-col>
+						</el-row>
+						<el-row>
+							<el-col :span="12">
+
+								<el-form-item label="班主任" prop="cteacher">
+
+									<el-input v-model="formData.cteacher"/>
+
+								</el-form-item>
+
+							</el-col>
+							<el-col :span="12">
+								<el-form-item label="专业id">
+									<el-select style="width: 300px" v-model="formData.pid" placeholder="请选择已存在的专业id">
+										<el-option v-for="emp in emps" :value="emp">{{emp}}</el-option>
+<!--										<option >{{emps}}</option>-->
+									</el-select>
+								</el-form-item>
+							</el-col>
+						</el-row>
+					</el-form>
+					<div slot="footer" class="dialog-footer">
+
+						<el-button @click="dialogFormVisible = false">取消</el-button>
+
+						<el-button type="primary" @click="handleAdd()">确定</el-button>
+
+					</div>
+				</el-dialog>
+				<el-dialog  :visible.sync="dialogFormVisible4Edit">
+						<div >~~请修改信息~~</div>
+						<el-form  ref="dataAddForm" :model="formData"  label-position="right" label-width="100px">
+							<el-row>
+
+								<el-col :span="12">
+
+									<el-form-item label="班级号（请确保未重复）" prop="classid">
+
+										<el-input v-model="formData.classid"/>
+
+									</el-form-item>
+
+								</el-col>
+								<el-col :span="12">
+
+									<el-form-item label="班级名称">
+
+										<el-input v-model="formData.classname" prop="classname"></el-input>
+
+									</el-form-item>
+
+								</el-col>
+							</el-row>
+							<el-row>
+								<el-col :span="12">
+
+									<el-form-item label="班主任" prop="cteacher">
+
+										<el-input v-model="formData.cteacher"/>
+
+									</el-form-item>
+
+								</el-col>
+								<el-col :span="12">
+
+									<el-form-item label="专业id">
+										<el-select style="width: 350px" v-model="formData.pid" placeholder="请选择已存在的专业id">
+											<el-option v-for="emp in emps" :value="emp">{{emp}}</el-option>
+										</el-select>
+									</el-form-item>
+
+								</el-col>
+
+							</el-row>
+						</el-form>
+
+						<div slot="footer" class="dialog-footer">
+
+							<el-button @click="dialogFormVisible4Edit = false">取消</el-button>
+
+							<el-button type="primary" @click="handleEdit()">确定</el-button>
+
+						</div>
+
+					</el-dialog>
+			</div>
+		</div>
+		<script src="../plugins/elementui/index.js"></script>
+		<script>
+			var vue = new Vue({
+				el: '#a2',
+				data:{
+					FuzzyData:"",
+					formData:{},
+					emps:[],
+					pros:[],//表格绑定的数据
+					dialogFormVisible:false,
+					dialogFormVisible4Edit:false,
+					page: 1,
+					pageSize: 10,
+					counts: 0,
+				},
+				created() {
+					this.init ();
+					this.GetSelectPid();
+					// this.SelectByAcademy();
+				},
+				methods: {
+					restFrom(){
+						this.formData={};
+					},
+					handleSizeChange (val) {
+						this.pageSize = val
+						this.init()
+					},
+					handleCurrentChange (val) {
+						this.page = val
+						this.init()
+					},
+					async GetSelectPid() {
+						await getPidApi().then((res) => {
+							console.log(res)
+							this.emps = res.data;
+						})
+					},
+					async init () {
+						await getClassApi({'page': this.page, 'pageSize': this.pageSize}).then(res => {
+							if (String(res.code) === '20041') {
+								this.pros = res.data.records
+								this.counts = Number(res.data.total)
+								console.log(this.counts)
+							} else {
+								this.$message.error(res.msg || '操作失败')
+							}
+						}).catch(err => {
+							this.$message.error('请求出错了：' + err)
+						})
+					},
+					showAddInput(){
+						this.dialogFormVisible =true;
+						this.restFrom();
+					},
+					handleUpdate(row){
+						this.dialogFormVisible4Edit =true;
+						axios.get("../class/"+row.classid).then((res)=>{
+							console.log(res)
+							if(res.data.code === 20041){
+								this.formData = res.data.data;
+								this.dialogFormVisible4Edit =true;
+								this.init();
+							}else this.$message.error(res.data.msg);
+						}).finally(()=>{
+							this.init();
+						})
+					},
+					handleAdd(){
+						axios.post("../class", this.formData).then((res) => {
+							console.log(res.data);
+							// //如果操作成功，关闭弹层
+							// this.dialogFormVisible=false;
+							// //显示数据
+							// this.getAll();
+							if (res.data.code === 20011) {
+								this.dialogFormVisible = false;
+								this.$message.success("添加成功");
+
+							} else if (res.data.code === 20010) {
+								this.$message.error("添加失败");
+							} else {
+								this.$message.error(res.data.msg);
+							}
+						}).finally(() => {
+							this.init ();
+						});
+					},
+					handleEdit(){
+						axios.put("../class", this.formData).then((res) => {
+							console.log(res.data);
+							// //如果操作成功，关闭弹层
+							// this.dialogFormVisible=false;
+							// //显示数据
+							// this.getAll();
+							if (res.data.code === 20031) {
+								this.dialogFormVisible4Edit = false;
+								this.$message.success("修改成功");
+							} else if (res.data.code === 20030) {
+								this.$message.error("修改失败");
+							} else {
+								this.$message.error(res.data.msg);
+							}
+						}).finally(() => {
+							this.init();
+						});
+
+					},
+					// 删除
+					handleDelete(row) {
+						//1.弹提示框
+						this.$confirm("此操作永久删除数据，是否继续？", "提示", {
+							type: 'info'
+						}).then(() => {
+							axios.delete("/class/" + row.classid).then((res) => {
+								if (res.data.code == 20021) {
+									//2、做删除业务
+									this.$message.success("删除成功");
+								} else {
+									this.$message.error("删除失败");
+								}
+							})
+						}).catch(() => {
+							//3、取消删除操作
+							this.$message.info("取消删除操作");
+						}).finally(() => {
+							this.init();
+						});
+					}
+				}
+			})
+		</script>
+	</body>
+</html>
