@@ -48,11 +48,11 @@
 							<el-input type="password" v-model="form.password" style="width: 60%"></el-input>
 						</el-form-item>
 						<el-form-item label="邮箱:" v-if="type ==2">
-							<el-input type="text" v-model="createForm.email" style="width: 73%" ></el-input>
+							<el-input type="text" v-model="form.email" style="width: 73%" ></el-input>
 							<el-button @click="sendmail" >发送验证码</el-button>
 						</el-form-item>
 						<el-form-item label="验证码:" v-if="type ==2">
-							<el-input type="text" v-model="createForm.code" ></el-input>
+							<el-input type="text" v-model="form.code" ></el-input>
 						</el-form-item>
 						<el-form-item>
 						<el-button type="primary" @click="onSubmit">立即修改</el-button>
